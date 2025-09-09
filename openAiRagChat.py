@@ -11,9 +11,9 @@ import re
 def init_settings():
     global client, db, embedding_model, OPENAI_API_KEY
     # 1. MongoDB 연결
-    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+    MONGO_URI = os.getenv("MONGO_URI")
     
-    client = MongoClient("mongodb+srv://junes1029_db:hwang707!!A!!A@junesung.p9sojjk.mongodb.net/?retryWrites=true&w=majority&appName=Junesung")
+    client = MongoClient(MONGO_URI)
     db = client["legal_db"]
 
     # 2. 임베딩 모델 (DB 저장할 때와 동일하게 맞춰야 함)
