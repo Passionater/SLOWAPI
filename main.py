@@ -4,6 +4,8 @@ from dotenv import load_dotenv
 from initFuntions import init_settings
 from openai import OpenAI
 from openAiRagChat import call_openai_api
+from typing import Optional
+import config
 
 
 app = FastAPI()
@@ -17,6 +19,15 @@ class ChatResponse(BaseModel):
     reply_content: str
     reply_answer: str
 
+class userInputParam(BaseModel):
+    prompt:  Optional[str] = "Generate a plan for a trip to Jeju Island"
+    temperature: Optional[float] = 0.7
+    max_length: Optional[int] = 50
+    image : Optional[str] = None
+
+class aiRespose(BaseModel):
+    response: str
+    action: str
 
 # # POST /chat : 챗봇 메시지를 받아 답변을 반환
 # @app.post("/chat", response_model=ChatResponse)
@@ -44,6 +55,27 @@ def handle_chat(chat_message: ChatMessage):
     context , answer = call_openai_api(user_message)
     
     return {"reply_content": context,"reply_answer": answer}
+    
+
+@app.post("/chatBot", response_model=aiRespose)
+def generate_plan(item: userInputParam):
+    prompt = item.prompt
+    max_length = item.max_length
+
+    try:
+
+        chat_client = OpenAI(api_key=config.OPENAI_API_KEY)
+
+        response = chat_client.chat.completions.create(
+            model="gpt-4o-mini",  # 필요시 gpt-4로 변경
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.7,
+            max_tokens=max_length
+        )
+        result = response.choices[0].message.content
+        return aiRespose(response=result, action="")
+    except Exception as e:
+        return aiRespose(response="Error occurred", action=str(e))
 
 
 
