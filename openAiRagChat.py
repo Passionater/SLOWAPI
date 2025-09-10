@@ -6,25 +6,7 @@ from openai import OpenAI
 from dotenv import load_dotenv
 import time
 import re
-
-# 전역 변수 초기화
-def init_settings():
-    global client, db, embedding_model, OPENAI_API_KEY
-    # 1. MongoDB 연결
-    MONGO_URI = os.getenv("MONGO_URI")
-    
-    client = MongoClient(MONGO_URI)
-    db = client["legal_db"]
-
-    # 2. 임베딩 모델 (DB 저장할 때와 동일하게 맞춰야 함)
-    embedding_model = HuggingFaceEmbeddings(
-        model_name="jhgan/ko-sroberta-multitask",
-        model_kwargs={'device': 'cpu'}
-    )
-
-    # 3. OPENAI_API_KEY 설정
-    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-
+import config
 
 # 4. 공통 검색 함수
 def search_collection(collection, index_name, embedding, top_k=3):
@@ -126,15 +108,15 @@ def make_Context(results_cases, results_laws, results_practices):
 
 def call_openai_api(user_prompt):
     #prompt를 임베딩으로 변환
-    embedding = embedding_model.embed_query(user_prompt)
+    embedding = config.embedding_model.embed_query(user_prompt)
 
-    results_cases = search_collection(db.cases, "cases_vector_index", embedding, top_k=10)
-    results_laws = search_collection(db.laws, "laws_vector_index", embedding, top_k=3)
-    results_practices = search_collection(db.practices, "practices_vector_index", embedding, top_k=5)
+    results_cases = search_collection(config.db.cases, "cases_vector_index", embedding, top_k=10)
+    results_laws = search_collection(config.db.laws, "laws_vector_index", embedding, top_k=3)
+    results_practices = search_collection(config.db.practices, "practices_vector_index", embedding, top_k=5)
 
     context = make_Context(results_cases, results_laws, results_practices)
 
-    client = OpenAI(api_key=OPENAI_API_KEY)
+    client = OpenAI(api_key=config.OPENAI_API_KEY)
 
     # 9. 프롬프트 생성
     prompt = f"""
@@ -183,7 +165,7 @@ if __name__ == "__main__":
     total_start = time.time()
     # 환경 변수 로드 및 설정 초기화
     load_dotenv()
-    init_settings()
+    #init_settings()
 
     # 테스트 질문
     user_question = "교통사고로 인한 손해배상 청구 소송에서, 상대방이 보험사인 경우와 개인인 경우에 어떤 차이가 있나요?"

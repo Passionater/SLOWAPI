@@ -41,11 +41,9 @@ def handle_chat(chat_message: ChatMessage):
     
     # (나중에는 여기에 실제 AI 모델 로직이 들어갑니다)
     # 지금은 간단히 받은 메시지를 되돌려주는 응답을 생성합니다.
-    bot_reply = f"'{user_message}'"
-    user_message = call_openai_api(user_question)
+    context , answer = call_openai_api(user_message)
     
-    
-    return {"reply": bot_reply}
+    return {"reply_content": context,"reply_answer": answer}
 
 
 
