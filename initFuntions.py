@@ -21,5 +21,7 @@ def init_settings():
     # 3. OPENAI_API_KEY 설정
     api_key = os.getenv("OPENAI_API_KEY")
     
+    kakao_api_key = os.getenv("KAKAO_API_KEY")
+    
     # config 모듈의 전역 변수 설정
-    config.set_globals(database, embedding, api_key)
+    config.set_globals(database, embedding, api_key,kakao_api_key)

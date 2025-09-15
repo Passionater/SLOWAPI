@@ -6,6 +6,8 @@ from openai import OpenAI
 from openAiRagChat import call_openai_api
 from typing import Optional
 import config
+from kakao_API import get_kakao_api
+from typing import List
 
 
 app = FastAPI()
@@ -32,6 +34,11 @@ class aiRespose(BaseModel):
 # --- ❗️새로운 검색 관련 모델 추가 ---
 class SearchResult(BaseModel):
     result: str
+    
+class SearchAPI(BaseModel):
+    place_name: str
+    phone: str
+    road_address_name: str    
     
     
 # # POST /chat : 챗봇 메시지를 받아 답변을 반환
@@ -99,6 +106,13 @@ def search_topic(query: str):
         search_result = f"'{query}'에 대한 검색 결과를 찾을 수 없습니다. 다른 검색어로 시도해 보세요."
         
     return {"result": search_result}
+
+from typing import List
+
+@app.get("/searchAPI", response_model=List[SearchAPI])
+def get_kakao_api123():
+    results = get_kakao_api()
+    return results[:3]
 
 
 #============================================호출할 function
