@@ -38,14 +38,14 @@ class SearchAPI(BaseModel):
     road_address_name: str
 
 # --- API 엔드포인트들 ---
-@router.post("/message", response_model=ChatResponse)
+@router.post("/chat", response_model=ChatResponse)
 def handle_chat(chat_message: ChatMessage):
     user_message = chat_message.message
     print(f"Flutter 앱으로부터 받은 메시지: {user_message}")
     context, answer = call_openai_api(user_message)
     return {"reply_content": context, "reply_answer": answer}
 
-@router.post("/bot", response_model=aiRespose)
+@router.post("/chatBot", response_model=aiRespose)
 def generate_plan(item: userInputParam):
     # ... (기존 chatBot 코드와 동일) ...
     prompt = item.prompt

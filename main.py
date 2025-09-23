@@ -2,14 +2,14 @@
 
 from fastapi import FastAPI
 from dotenv import load_dotenv
+from initFuntions import init_settings
 
 import models
 from database import engine
 from chatbot import router as chatbot_router
 from auth import router as auth_router
 
-# .env 파일 로드 (가장 먼저 실행되도록)
-load_dotenv()
+
 
 app = FastAPI()
 
@@ -25,5 +25,10 @@ app.include_router(chatbot_router, prefix="/api", tags=["Chatbot & Search"])
 
 # 서버 실행 (개발용)
 if __name__ == "__main__":
+    
+    # .env 파일 로드 (가장 먼저 실행되도록)
+    load_dotenv()
+    init_settings()
+    
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

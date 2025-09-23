@@ -7,6 +7,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from passlib.context import CryptContext
 from dotenv import load_dotenv
+from datetime import datetime, timedelta
+from jose import jwt, JWTError
 
 import models, schemas
 from database import get_db
@@ -50,13 +52,42 @@ async def register_user(user_create: schemas.UserCreate, db: AsyncSession = Depe
     await db.refresh(db_user)
     return db_user
 
-@router.post("/login", response_model=schemas.UserResponse)
+@router.post("/login") # 응답 모델을 직접 정의하므로 response_model 제거 또는 수정
 async def login_for_access_token(user_login: schemas.UserLogin, db: AsyncSession = Depends(get_db)):
-    # ... (기존 login 코드와 동일) ...
+    # 1. DB에서 사용자 조회 및 비밀번호 검증 (기존 코드와 동일)
     user = await get_user_by_email(db, email=user_login.email)
     if not user or not pwd_context.verify(user_login.password, user.password):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect email or password", headers={"WWW-Authenticate": "Bearer"})
-    return user
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+
+    # 2. JWT 액세스 토큰 생성 (추후 로그인 유지를 위해 필요)
+    #    .env 파일에 SECRET_KEY와 ALGORITHM을 설정해야 합니다.
+    #    예: SECRET_KEY=your_super_secret_key
+    #        ALGORITHM=HS256
+    SECRET_KEY = os.getenv("SECRET_KEY")
+    ALGORITHM = os.getenv("ALGORITHM")
+    
+    access_token_expires = timedelta(minutes=60) # 토큰 유효기간: 60분
+    to_encode = {
+        "sub": user.email,
+        "exp": datetime.utcnow() + access_token_expires,
+    }
+    access_token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+    # 3. [핵심] Flutter 앱이 원하는 형태로 리턴값 변경
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user_info": {
+            "email": user.email,
+            "nickname": user.nickname,
+            # 'profileImageUrl'은 자체 회원의 경우 null일 수 있습니다.
+            "profileImageUrl": None 
+        }
+    }
 
 # ⭐️ 새로운 카카오 로그인 엔드포인트 (액세스 토큰 사용)
 @router.post("/kakao", response_model=schemas.UserResponse)
